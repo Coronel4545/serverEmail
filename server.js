@@ -6,17 +6,29 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log('Iniciando servidor...');
+console.log('Variáveis de ambiente carregadas:');
+console.log('SMTP_HOST:', process.env.SMTP_HOST);
+console.log('SMTP_PORT:', process.env.SMTP_PORT);
+console.log('SMTP_SECURE:', process.env.SMTP_SECURE);
+console.log('SMTP_USER:', process.env.SMTP_USER);
+console.log('PORT:', PORT);
+
 app.use(cors());
 app.use(express.json());
 
 app.post('/contact', async (req, res) => {
+  console.log('Requisição recebida em /contact');
   const { name, email, subject, message } = req.body;
+  console.log('Dados recebidos:', { name, email, subject, message });
 
   if (!name || !email || !subject || !message) {
+    console.log('Erro: Campos obrigatórios faltando');
     return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
   }
 
   try {
+    console.log('Configurando transporter SMTP...');
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
@@ -27,6 +39,7 @@ app.post('/contact', async (req, res) => {
       },
     });
 
+    console.log('Enviando e-mail para support@cortex5g.fun...');
     await transporter.sendMail({
       from: `"${name}" <${email}>`,
       to: 'support@cortex5g.fun',
@@ -37,14 +50,16 @@ app.post('/contact', async (req, res) => {
              <p><b>Assunto:</b> ${subject}</p>
              <p><b>Mensagem:</b><br>${message}</p>`,
     });
-
+    console.log('E-mail enviado com sucesso!');
     res.json({ success: true, message: 'Mensagem enviada com sucesso!' });
   } catch (error) {
+    console.error('Erro ao enviar e-mail:', error);
     res.status(500).json({ error: 'Erro ao enviar mensagem.' });
   }
 });
 
 app.get('/', (req, res) => {
+  console.log('Rota / acessada');
   res.send('Servidor de contato rodando!');
 });
 
